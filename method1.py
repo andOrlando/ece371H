@@ -54,6 +54,7 @@ def main():
         if unsafe:
             history.append({ "role": "system", "content": "the response to the prior chat was deemed unsafe"})
             print("unsafe response")
+            continue
         
         history.append(most_recent)
         print("safe response")
