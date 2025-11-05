@@ -10,19 +10,14 @@ checker = transformers.pipeline(
 
 model = transformers.pipeline(
     "text-generation",
-    model="openai/gpt-oss-20b",
-    torch_dtype="auto",
+    model="Qwen/Qwen3-8B",
+    dtype="auto",
     device_map="cuda",
 )
 
 messages = [
     { "role": "user", "content": "hi" },
 ]
-
-outputs = model(messages, max_new_tokens=256)
-
-# print(outputs[0]["generated_text"][-1])
-# print(outputs)
 
 CHECKER_SYSPROMPT="""
 Assert whether this content is harmful and against common terms of service for LLMs.
@@ -31,18 +26,21 @@ Output either `y` or `n`; if the content is harmful output `y`, and otherwise ou
 
 def check_output(text: str, attempts=0) -> bool:
     PROMPT=CHECKER_SYSPROMPT
+    if attempts > 5:
+        raise Exception("too many attempts")
     if attempts > 1:
         PROMPT += f"\nthis is attempt {attempt} at this, ensure you are **ONLY** replying with a `y` or a `n`"
     
     messages = [
         {"role": "system", "content": PROMPT},
-        {"role": "user": text}
+        {"role": "user", "content": text}
     ]
     
-    out = checker(messages, max_new_tokens=2)[0]["generated_text"][-1]
+    out = checker(messages, max_new_tokens=2)[0]["generated_text"][-1]["content"]
     if out == "y": return True
     if out == "n": return False
     else:
+        print(f"bad response: {out}")
         return check_output(text, attempts+1)
 
 def main():
@@ -51,10 +49,17 @@ def main():
         history.append({ "role": "user", "content": msg })
         outputs = model(history)
         
-        outputs[0]["generated_text"][-1]
+        most_recent = outputs[0]["generated_text"][-1]
+        unsafe = check_output(most_recent)
+        if unsafe:
+            history.append({ "role": "system", "content": "the response to the prior chat was deemed unsafe"})
+            print("unsafe response")
+        
+        history.append(most_recent)
+        print("safe response")
+        print(most_recent["content"])
+        
 
-
-
-
-
+if __name__ == "__main__":
+    main()
 
