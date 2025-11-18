@@ -1,5 +1,3 @@
-import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer
 import transformers
 
 checker = transformers.pipeline(
@@ -29,7 +27,7 @@ def check_output(text: str, attempts=0) -> bool:
     if attempts > 5:
         raise Exception("too many attempts")
     if attempts > 1:
-        PROMPT += f"\nthis is attempt {attempt} at this, ensure you are **ONLY** replying with a `y` or a `n`"
+        PROMPT += f"\nthis is attempt {attempts} at this, ensure you are **ONLY** replying with a `y` or a `n`"
     
     messages = [
         {"role": "system", "content": PROMPT},
