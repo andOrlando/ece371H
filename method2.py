@@ -33,7 +33,7 @@ def main():
         outputs = model(history2)
         
         most_recent = outputs[0]["generated_text"][-1]
-        if most_recent[len(KEY):] == KEY:
+        if len(most_recent) >= len(KEY) and most_recent[len(KEY):] == KEY: 
             most_recent = most_recent[len(KEY):]
             is_dangerous = True
 
